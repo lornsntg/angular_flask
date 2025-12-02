@@ -1,25 +1,40 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { SpesaService } from './services/spesa-service';
 import { FlaskService } from './services/flask-service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, CommonModule, FormsModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('frontend');
 
-  profilo: any = {}; //dove salveremo il JSON ricevuto
+lista = signal<any[]>([]);
+nuovoElemento = signal('');
 
-  constructor(private flaskService: FlaskService) {}
-  
-  ngOnInit(): void {
-  //quando il componente si avvia chiama il service
-    this.flaskService.getProfilo().subscribe((dati) => {
-    this.profilo = dati; //assegna il JSON ricevuto
-    console.log("Dati arrivati:", this.profilo);
+constructor(private spesa: SpesaService) {}
+
+  ngOnInit() {
+    this.caricaLista();
+  }
+
+  caricaLista() {
+    this.spesa.getLista().subscribe((dati: any) => {
+    this.lista.set(dati);
   });
-}
+  }
+
+  aggiungi() {
+    const val = this.nuovoElemento().trim();
+    if (!val) return;
+      this.spesa.aggiungiElemento(val).subscribe(() => {
+      this.nuovoElemento.set('');
+      this.caricaLista();
+    });
+  }
 }
